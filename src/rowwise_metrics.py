@@ -42,6 +42,6 @@ def make_dist(x):
 
 
 @make_rowwise
-def kl_div(x, y):
+def rowwise_kl_divergence(x, y):
     x, y = make_dist(x), make_dist(y)   # normalize to a distribution
     return np.sum(np.where(y != 0, x * np.log(x / y), 0))
