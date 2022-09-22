@@ -1,12 +1,10 @@
-from enum import Enum, auto
-from typing import TypeVar, Tuple, Iterable, Optional, Callable
-from itertools import starmap
-
 import numpy as np
 import plotly.graph_objects as go
-
+from enum import Enum, auto
+from typing import TypeVar, Tuple, Iterable, Optional, Callable
 from src.preprocessing import LabelCropp
-from rowwise_metrics import rowwise_cosine
+from src.rowwise_metrics import rowwise_cosine
+from plotly.express import colors
 
 T = TypeVar('T')
 
@@ -19,16 +17,21 @@ class IndexType(Enum):
   HORIZONTAL       = auto()
   VERTICAL         = auto()
 
+
+
+def id_from_snake_index(x, y, dim):
+  return y * dim[1] + (x if not y % 2 else dim[1] - x - 1)
   
   
-def reshape(values:np.array, dim: Tuple[int, int], index_type: IndexType) -> np.array:
+def reshape(values:np.array, dimensions: Tuple[int, int], index_type: IndexType) -> np.array:
   """
   Modifies values!
   """
   if index_type in [IndexType.VERTICAL_SNAKE, IndexType.VERTICAL]:
-    values = np.resize(values, dim[::-1]).transpose()
+    values.resize(dimensions[::-1], refcheck=False)
+    values = np.transpose(values)
   else:
-    values = np.resize(values, dim)
+    values.resize(dimensions, refcheck=False)
 
   if index_type == IndexType.HORIZONTAL_SNAKE:
     values[1::2, :] = values[1::2, ::-1]
@@ -41,36 +44,36 @@ def reshape(values:np.array, dim: Tuple[int, int], index_type: IndexType) -> np.
 def plot_map(values: np.array,                                                 
              dim: Tuple[int, int],                                      
              index_type: IndexType=IndexType.HORIZONTAL,
-             transpose=False,
-             only_values=False,
              title: Optional[str]=None,
+             suppress_outliers=False,
              *args,
              **kwargs,                                                      
              ):
-  values = reshape(values, dim, index_type)
-  if transpose:
-    values = np.transpose(values)
-      
-  if only_values:
-    return values
+    values = reshape(values, dim, index_type)
 
-  fig = go.Figure(data=go.Heatmap(
+    zmin, zmax = None, None
+    if suppress_outliers:
+        zmin, zmax = np.percentile(values, 1), np.percentile(values, 99)
+
+    fig = go.Figure(data=go.Heatmap(
         z=values,
+        zmin=zmin,
+        zmax=zmax,
         *args,
         **kwargs))
 
-  fig.update_layout(
-    title=title,
-  )
+    fig.update_layout(
+        title=title,
+    )
 
-  return fig
+    return fig
 
 
 def error_map(y_true: Iterable[T],                                             
               y_pred: Iterable[T],
               dim: Tuple[int, int],                                            
               index_type: IndexType=IndexType.HORIZONTAL, 
-              rowwise_error: Callable[[Iterable[T], Iterable[T]], Iterable[float]]=rowwise_cosine,                                          
+              rowwise_error: Callable[[Iterable[T], Iterable[T]], Iterable[float]]=rowwise_cosine,                                                                            
               title: Optional[str]=None,                                                                                    
               add_stats: bool=False,
               *args,
@@ -83,7 +86,7 @@ def error_map(y_true: Iterable[T],
       title = ''
     title += ' (avg: {}, min: {}, max: {})'.format(np.mean(values), np.min(values), np.max(values))
 
-  return plot_map(values, dim, index_type, *args, **kwargs)
+  return plot_map(values, dim, index_type, title=title, *args, **kwargs)
 
 
 def intensity_map(spectra: np.array,
@@ -113,7 +116,33 @@ def spectra_intensity(spectra: np.array,
       end = calibration[-1]
 
     return np.sum(LabelCropp(label_from=start, label_to=end, labels=calibration).fit_transform(spectra), axis=1)
-    
-    
-def id_from_snake_index(x, y, dim):
-  return y * dim[1] + (x if not y % 2 else dim[1] - x - 1)
+
+
+def plot_spectra(spectra: np.ndarray,
+                 calibration: Optional[Iterable]=None,
+                 title: Optional[str]=None,
+                 labels: Optional[Iterable[str]]=None,
+                 colormap=colors.qualitative.Set1,
+                 axes_titles: bool=True,
+                 opacity: float = .7,
+                 ):
+    if calibration is None:
+        calibration = np.arange(len(spectra[0]))
+    if labels is None:
+        labels = ["class {}".format(x+1) for x in range(len(spectra))]
+    fig = go.Figure()
+    for i in range(len(spectra)):
+        fig.add_trace(
+            go.Scatter(
+                x = calibration,
+                y = spectra[i],
+                name = str(labels[i]),
+                line = {'color': colormap[i % len(colormap)]},
+                opacity=opacity,
+            )
+        )
+    fig.update_layout(
+        title = title,
+        xaxis_title = "wavelength (nm)" if axes_titles else "",
+        yaxis_title = "relative intensity (-)" if axes_titles else "")
+    return fig
