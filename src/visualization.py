@@ -143,6 +143,6 @@ def plot_spectra(spectra: np.ndarray,
         )
     fig.update_layout(
         title = title,
-        xaxis_title = "wavelength (nm)" if axes_titles else "",
+        xaxis_title = "wavelengths (nm)" if axes_titles else "",
         yaxis_title = "relative intensity (-)" if axes_titles else "")
     return fig
