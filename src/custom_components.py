@@ -49,6 +49,8 @@ def make_tooltip_title(title, idx, tooltip_text):
         className="card-title"
     )
 
+
+# TODO labelPosition
 def make_toggle(label_false, label_true, idx):
     return place_in_container(
         dbc.Row([
