@@ -3,6 +3,7 @@ import dash_bootstrap_components as dbc
 from dash import html
 from dash import dcc
 import dash_daq
+from dash import dash_table
 
 # TODO transform into objects
 
@@ -71,17 +72,8 @@ def make_dropdown(idx, options):
     ])
 
 
-# TODO table body
-def make_table(title, idx):
-    # table header
-    row1 = html.Tr([html.Td("Arthur"), html.Td("Dent")])
-    row2 = html.Tr([html.Td("Ford"), html.Td("Prefect")])
-    row3 = html.Tr([html.Td("Zaphod"), html.Td("Beeblebrox")])
-    row4 = html.Tr([html.Td("Trillian"), html.Td("Astra")])
-
-    table_body = [html.Tbody([row1, row2, row3, row4])]
-
-    table = dbc.Table(table_body, bordered=True)
+def make_error_table(title, idx):
+    table = dbc.Table([], bordered=True, id=idx)
 
     return place_in_container([
             make_tooltip_title(title, 'table_title', 'TBD'),
