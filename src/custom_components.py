@@ -79,3 +79,7 @@ def make_error_table(title, idx):
             make_tooltip_title(title, 'table_title', 'TBD'),
             table,
         ])
+
+
+def make_button(text, idx, color='secondary'):
+    return place_in_container([ dbc.Button(text, id=idx, color=color, outline=True),])
