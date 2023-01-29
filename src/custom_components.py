@@ -45,6 +45,7 @@ def make_tooltip_title(title, idx, tooltip_text):
             dbc.Tooltip(
                 tooltip_text,
                 target=idx,
+                id=idx + '_tooltip',
             ),
         ],
         className="card-title"
@@ -72,11 +73,11 @@ def make_dropdown(idx, options):
     ])
 
 
-def make_error_table(title, idx):
+def make_error_table(title, title_tooltip, idx):
     table = dbc.Table([], bordered=True, id=idx)
 
     return place_in_container([
-            make_tooltip_title(title, 'table_title', 'TBD'),
+            make_tooltip_title(title, 'table_title', title_tooltip),
             table,
         ])
 
