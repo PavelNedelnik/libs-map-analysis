@@ -53,11 +53,9 @@ def make_tooltip_title(title, idx, tooltip_text):
 
 
 # TODO labelPosition
-def make_toggle(label_false, label_true, idx):
+def make_toggle(label_text, idx):
     return place_in_container(
-        dbc.Row([
-            dbc.Col([comp]) for comp in [label_false, dash_daq.BooleanSwitch(id=idx, className='dbc'), label_true] if not isinstance(comp, str) or len(comp)
-        ])
+        dash_daq.BooleanSwitch(id=idx, className='dbc', label=label_text, labelPosition="left")
     )
 
 
